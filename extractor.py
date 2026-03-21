@@ -9,11 +9,11 @@ from vidgear.gears import CamGear
 from concurrent.futures import ThreadPoolExecutor
 
 SCOREBOARD_CONFIG = {
-    "stream_url": "https://www.youtube.com/watch?v=doozer",
+    "stream_url": "https://www.youtube.com/watch?v=d-hw7nU4pI0",
     "comp_id": "2026casac",
     "day": "1",
-    "user": "doozer",
-    "upload_to_mongo": False,
+    "user": "doozer_server",
+    "upload_to_mongo": True,
     "mongo_connection": "",
 }
 
