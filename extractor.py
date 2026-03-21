@@ -141,12 +141,21 @@ prev_rois = {k: None for k in BASE_ROIS}
 last_ocr_results = {k: "" for k in BASE_ROIS}
 
 
+def scale_rois(frame):
+    h, w = frame.shape[:2]
+    sx, sy = w / 1920, h / 1080
+    return {
+        k: (int(y1*sy), int(y2*sy), int(x1*sx), int(x2*sx))
+        for k, (y1, y2, x1, x2) in BASE_ROIS.items()
+    }
+
 while True:
     frame = stream.read()
     if frame is None:
         break
 
-    curr_rois = {k: frame[y1:y2, x1:x2] for k, (y1, y2, x1, x2) in BASE_ROIS.items()}
+    rois = scale_rois(frame)
+    curr_rois = {k: frame[y1:y2, x1:x2] for k, (y1, y2, x1, x2) in rois.items()}
 
     tasks = {}
     for key in curr_rois:
