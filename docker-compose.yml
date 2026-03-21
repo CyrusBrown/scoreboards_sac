@@ -5,5 +5,4 @@ services:
     environment:
       - MONGO_CONNECTION=${MONGO_CONNECTION:-}
     volumes:
-      - ./scoreboards_out:/app/scoreboards_out
-      - ./videos_out:/app/videos_out
+      - ./output:/app/output

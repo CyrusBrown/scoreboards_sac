@@ -22,8 +22,8 @@ SAVE_VIDEOS = True
 SHOW_VIDEO = False
 
 comp_id = SCOREBOARD_CONFIG["comp_id"]
-OUTPUT_DIR = f"{comp_id}_{SCOREBOARD_CONFIG['day']}_scoreboards"
-VIDEO_DIR = f"{comp_id}_{SCOREBOARD_CONFIG['day']}_videos"
+OUTPUT_DIR = os.path.join("output", f"{comp_id}_{SCOREBOARD_CONFIG['day']}_scoreboards")
+VIDEO_DIR = os.path.join("output", f"{comp_id}_{SCOREBOARD_CONFIG['day']}_videos")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(VIDEO_DIR, exist_ok=True)
 
