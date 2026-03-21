@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DoozerVISION — Manual Scoreboard Extractor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 640px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: #f1f5f9;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      color: #f1f5f9;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #6366f1; }
+    input[type="text"]::placeholder { color: #475569; }
+
+    button {
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.6rem 1.4rem;
+      transition: background 0.2s, opacity 0.2s;
+      white-space: nowrap;
+    }
+    button:hover:not(:disabled) { background: #4f46e5; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Status section ─────────────────────────────────── */
+    #status-section {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    #status-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    #pct-label {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .progress-track {
+      background: #0f1117;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #a78bfa);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .progress-bar.indeterminate {
+      width: 40% !important;
+      animation: slide 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes slide {
+      from { margin-left: -40%; }
+      to   { margin-left: 100%; }
+    }
+
+    /* ── Log ────────────────────────────────────────────── */
+    #log {
+      margin-top: 1.25rem;
+      background: #0f1117;
+      border: 1px solid #1e2236;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      color: #64748b;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    #log .entry { color: #94a3b8; }
+    #log .entry.score { color: #a78bfa; }
+    #log .entry.done  { color: #34d399; }
+    #log .entry.error { color: #f87171; }
+
+    /* ── Done / download ────────────────────────────────── */
+    #done-section {
+      display: none;
+      margin-top: 1.5rem;
+      background: #0d1f18;
+      border: 1px solid #065f46;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    #done-msg {
+      font-size: 0.85rem;
+      color: #34d399;
+    }
+    #download-btn {
+      background: #059669;
+      font-size: 0.85rem;
+      padding: 0.45rem 1rem;
+    }
+    #download-btn:hover { background: #047857; }
+
+    #error-section {
+      display: none;
+      margin-top: 1.25rem;
+      background: #1f0d0d;
+      border: 1px solid #7f1d1d;
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      font-size: 0.85rem;
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>DoozerVISION</h1>
+    <p class="subtitle">Manual scoreboard extractor — enter a TBA match key to process</p>
+
+    <label for="match-key-input">Match Key</label>
+    <div class="input-row">
+      <input
+        id="match-key-input"
+        type="text"
+        placeholder="e.g. 2026casac_qm1"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="process-btn" onclick="startJob()">Process</button>
+    </div>
+
+    <div id="status-section">
+      <div class="status-header">
+        <span id="status-label">Processing…</span>
+        <span id="pct-label"></span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar indeterminate" id="progress-bar"></div>
+      </div>
+      <div id="log"></div>
+    </div>
+
+    <div id="done-section">
+      <span id="done-msg"></span>
+      <a id="download-btn-link" href="#" download>
+        <button id="download-btn">Download JSON</button>
+      </a>
+    </div>
+
+    <div id="error-section"></div>
+  </div>
+
+  <script>
+    let currentJobId = null;
+    let currentEs    = null;
+
+    function log(message, cls = "entry") {
+      const div = document.getElementById("log");
+      const el  = document.createElement("div");
+      el.className = `entry ${cls}`;
+      el.textContent = message;
+      div.appendChild(el);
+      div.scrollTop = div.scrollHeight;
+    }
+
+    function setProgress(current, total) {
+      const bar = document.getElementById("progress-bar");
+      const pct = document.getElementById("pct-label");
+      if (!total) {
+        bar.classList.add("indeterminate");
+        pct.textContent = "";
+      } else {
+        bar.classList.remove("indeterminate");
+        const p = Math.min(100, Math.round((current / total) * 100));
+        bar.style.width = p + "%";
+        pct.textContent = p + "%";
+      }
+    }
+
+    function reset() {
+      if (currentEs) { currentEs.close(); currentEs = null; }
+      document.getElementById("status-section").style.display = "none";
+      document.getElementById("done-section").style.display   = "none";
+      document.getElementById("error-section").style.display  = "none";
+      document.getElementById("log").innerHTML = "";
+      document.getElementById("progress-bar").style.width = "0%";
+      document.getElementById("progress-bar").classList.add("indeterminate");
+      document.getElementById("pct-label").textContent = "";
+    }
+
+    async function startJob() {
+      const input    = document.getElementById("match-key-input");
+      const matchKey = input.value.trim();
+      if (!matchKey) { input.focus(); return; }
+
+      reset();
+
+      document.getElementById("process-btn").disabled = true;
+      document.getElementById("status-section").style.display = "block";
+      document.getElementById("status-label").textContent = "Starting…";
+
+      let resp;
+      try {
+        resp = await fetch("/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ match_key: matchKey }),
+        });
+      } catch (e) {
+        showError("Network error: " + e.message);
+        return;
+      }
+
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        showError(body.error || "Server error");
+        return;
+      }
+
+      const { job_id } = await resp.json();
+      currentJobId = job_id;
+      listenToJob(job_id, matchKey);
+    }
+
+    function listenToJob(jobId, matchKey) {
+      const es = new EventSource(`/stream/${jobId}`);
+      currentEs = es;
+
+      es.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+
+        if (msg.type === "heartbeat") return;
+
+        if (msg.type === "progress") {
+          document.getElementById("status-label").textContent = "Processing…";
+          setProgress(msg.current, msg.total);
+          const isScore = msg.message.startsWith("Score");
+          log(msg.message, isScore ? "score" : "entry");
+        }
+
+        if (msg.type === "done") {
+          es.close();
+          setProgress(1, 1);
+          document.getElementById("status-label").textContent = "Complete";
+          log(`Finished — ${msg.entry_count} scoreboard entries`, "done");
+          showDone(jobId, matchKey, msg.entry_count);
+        }
+
+        if (msg.type === "error") {
+          es.close();
+          log("Error: " + msg.message, "error");
+          showError(msg.message);
+        }
+      };
+
+      es.onerror = () => {
+        es.close();
+        if (document.getElementById("done-section").style.display !== "flex") {
+          showError("Connection to server lost.");
+        }
+      };
+    }
+
+    function showDone(jobId, matchKey, count) {
+      document.getElementById("process-btn").disabled = false;
+      const done = document.getElementById("done-section");
+      done.style.display = "flex";
+      document.getElementById("done-msg").textContent =
+        `${matchKey} — ${count} entries extracted`;
+      const link = document.getElementById("download-btn-link");
+      link.href = `/download/${jobId}`;
+      link.download = `${matchKey}_scoreboard.json`;
+    }
+
+    function showError(msg) {
+      document.getElementById("process-btn").disabled = false;
+      const err = document.getElementById("error-section");
+      err.style.display = "block";
+      err.textContent   = "Error: " + msg;
+    }
+
+    // Allow Enter key to submit
+    document.getElementById("match-key-input")
+      .addEventListener("keydown", (e) => { if (e.key === "Enter") startJob(); });
+  </script>
+</body>
+</html>

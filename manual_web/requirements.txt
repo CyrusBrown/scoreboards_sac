@@ -1,9 +1,8 @@
 numpy==2.4.1
 pymongo==4.16.0
-opencv-python==4.13.0.90
+opencv-python-headless==4.13.0.90
 pytesseract==0.3.13
-vidgear[core]==0.3.4
-yt-dlp==2026.2.21
 pytubefix
 requests
 python-dotenv
+flask>=3.0

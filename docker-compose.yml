@@ -1,8 +1,24 @@
 services:
-  extractor:
-    build: .
+
+  # ── Automatic stream extractor ───────────────────────────────────────────────────
+  stream:
+    build:
+      context: ./stream
     restart: unless-stopped
     environment:
       - MONGO_CONNECTION=${MONGO_CONNECTION:-}
     volumes:
-      - ./output:/app/output
+      - ./stream/output:/app/output
+
+  # ── Manual web dashboard ─────────────────────────────────────────────────────────
+  manual:
+    build:
+      context: .
+      dockerfile: manual_web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - TBA_KEY=${TBA_KEY:-}
+      - MONGO_KEY=${MONGO_KEY:-}
+      - UPLOAD_TO_MONGO=${UPLOAD_TO_MONGO:-false}
