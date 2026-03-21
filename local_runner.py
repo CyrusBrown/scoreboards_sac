@@ -14,7 +14,7 @@ MATCH_KEYS = [
 # ─── Config ───────────────────────────────────────────────────────────────────────
 CONFIG = {
     "tba_key":            os.getenv("TBA_KEY", ""),
-    "mongo_key":          os.getenv("MONGO_KEY", ""),
+    "mongo_uri":          os.getenv("MONGO_URI", ""),
     "comp_id":            "2026casac",
     "output_dir":         "output",
     "extract_scoreboard": True,

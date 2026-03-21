@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 
 TBA_KEY      = os.getenv("TBA_KEY", "")
-MONGO_KEY    = os.getenv("MONGO_KEY", "")
+MONGO_URI    = os.getenv("MONGO_URI", "")
 UPLOAD_MONGO = os.getenv("UPLOAD_TO_MONGO", "false").lower() == "true"
 
 # job_id -> { status, match_key, progress_queue, result, error }
@@ -34,7 +34,7 @@ def _run_job(job_id, match_key):
     try:
         processor = MatchProcessor(
             tba_key=TBA_KEY,
-            mongo_uri=MONGO_KEY if UPLOAD_MONGO else None,
+            mongo_uri=MONGO_URI if UPLOAD_MONGO else None,
         )
         timeline = processor.process_match(
             match_key,

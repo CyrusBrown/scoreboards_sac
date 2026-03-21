@@ -6,7 +6,7 @@ services:
       context: ./stream
     restart: unless-stopped
     environment:
-      - MONGO_CONNECTION=${MONGO_CONNECTION:-}
+      - MONGO_URI=${MONGO_URI:-}
     volumes:
       - ./stream/output:/app/output
 
@@ -20,5 +20,5 @@ services:
       - "5000:5000"
     environment:
       - TBA_KEY=${TBA_KEY:-}
-      - MONGO_KEY=${MONGO_KEY:-}
+      - MONGO_URI=${MONGO_URI:-}
       - UPLOAD_TO_MONGO=${UPLOAD_TO_MONGO:-false}
