@@ -4,24 +4,18 @@ import numpy as np
 import pytesseract
 import json
 import os
+from pymongo import MongoClient
 from vidgear.gears import CamGear
 from concurrent.futures import ThreadPoolExecutor
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "scoreboard_config.json")
-CONFIG_DEFAULTS = {
+SCOREBOARD_CONFIG = {
     "stream_url": "https://www.youtube.com/watch?v=doozer",
-    "comp_id": "1212doozer",
+    "comp_id": "2026casac",
     "day": "1",
     "user": "doozer",
+    "upload_to_mongo": False,
+    "mongo_connection": "mongodb://localhost:27017",
 }
-
-if not os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "w") as f:
-        json.dump(CONFIG_DEFAULTS, f, indent=4)
-    print(f"Created default config at {CONFIG_PATH}")
-
-with open(CONFIG_PATH) as f:
-    SCOREBOARD_CONFIG = json.load(f)
 
 DEBUG = False
 SAVE_VIDEOS = True
@@ -46,6 +40,28 @@ BASE_ROIS = {
 NUMBER_ROIS = {"red", "timer", "blue", "blue_rp", "red_rp"}
 
 executor = ThreadPoolExecutor(max_workers=6)
+
+UPLOAD_TO_MONGO = SCOREBOARD_CONFIG.get("upload_to_mongo", False)
+mongo_collection = None
+if UPLOAD_TO_MONGO:
+    _mongo_client = MongoClient(SCOREBOARD_CONFIG["mongo_connection"])
+    mongo_collection = _mongo_client["doozervision"]["scoreboard_cache"]
+    print("MongoDB connected.")
+
+
+def upload_scoreboard(match_id, scoreboard_data):
+    try:
+        result = mongo_collection.update_one(
+            {"match_id": match_id},
+            {"$set": {"scoreboard_data": scoreboard_data["timeline"]}},
+            upsert=True,
+        )
+        if result.upserted_id:
+            print(f"MONGO: Inserted {match_id}")
+        else:
+            print(f"MONGO: Updated {match_id}")
+    except Exception as e:
+        print(f"MONGO ERROR: {e}")
 
 
 def extract_text(roi, number_only=False):
@@ -210,6 +226,9 @@ while True:
 
                 end_reason = "Missing Timer" if missing_timer_count > 40 else "Timer reached 0:00"
                 print(f"SAVED: {match_id} | '{current_match_name}' (Ended via: {end_reason})")
+
+                if UPLOAD_TO_MONGO:
+                    upload_scoreboard(match_id, {"timeline": current_timeline})
 
     last_timer_sec = sec
 

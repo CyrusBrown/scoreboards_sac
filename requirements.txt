@@ -1,4 +1,5 @@
 numpy==2.4.1
+pymongo==4.16.0
 opencv-python==4.13.0.90
 pytesseract==0.3.13
 vidgear[core]==0.3.4
