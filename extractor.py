@@ -9,8 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "scoreboard_config.json")
 CONFIG_DEFAULTS = {
-    "stream_url": "https://www.youtube.com/watch?v=JOcMhq_u9Es",
-    "comp_id": "2026casac",
+    "stream_url": "https://www.youtube.com/watch?v=doozer",
+    "comp_id": "1212doozer",
     "day": "1",
     "user": "doozer",
 }
