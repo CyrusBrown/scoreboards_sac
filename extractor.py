@@ -14,7 +14,7 @@ SCOREBOARD_CONFIG = {
     "day": "1",
     "user": "doozer",
     "upload_to_mongo": False,
-    "mongo_connection": "mongodb://localhost:27017",
+    "mongo_connection": "",
 }
 
 DEBUG = False
@@ -44,7 +44,10 @@ executor = ThreadPoolExecutor(max_workers=6)
 UPLOAD_TO_MONGO = SCOREBOARD_CONFIG.get("upload_to_mongo", False)
 mongo_collection = None
 if UPLOAD_TO_MONGO:
-    _mongo_client = MongoClient(SCOREBOARD_CONFIG["mongo_connection"])
+    mongo_connection = SCOREBOARD_CONFIG.get("mongo_connection") or os.environ.get("MONGO_CONNECTION")
+    if not mongo_connection:
+        raise ValueError("upload_to_mongo is enabled but no mongo_connection set in config or MONGO_CONNECTION env var")
+    _mongo_client = MongoClient(mongo_connection)
     mongo_collection = _mongo_client["doozervision"]["scoreboard_cache"]
     print("MongoDB connected.")
 
