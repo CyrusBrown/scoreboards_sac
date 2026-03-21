@@ -1,0 +1,8 @@
+services:
+  extractor:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./scoreboard_config.json:/app/scoreboard_config.json
+      - ./scoreboards_out:/app/scoreboards_out
+      - ./videos_out:/app/videos_out
