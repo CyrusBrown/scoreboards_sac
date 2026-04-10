@@ -70,10 +70,12 @@ def upload_scoreboard(match_id, scoreboard_data):
 def extract_text(roi, number_only=False):
     if roi is None or roi.size == 0:
         return ""
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     config = "--psm 7"
     if number_only:
         config += " -c tessedit_char_whitelist=0123456789:"
-    return pytesseract.image_to_string(roi, config=config).strip()
+    return pytesseract.image_to_string(thresh, config=config).strip()
 
 
 def parse_timer(timer_str):
@@ -87,10 +89,10 @@ def parse_timer(timer_str):
         return None
 
 
-def has_changed(img1, img2, threshold=500):
+def has_changed(img1, img2, threshold=2.0):
     if img1 is None or img2 is None:
         return True
-    return np.sum(cv2.absdiff(img1, img2)) > threshold
+    return np.mean(cv2.absdiff(img1, img2)) > threshold
 
 
 def parse_match_id(name):
@@ -149,12 +151,15 @@ def scale_rois(frame):
         for k, (y1, y2, x1, x2) in BASE_ROIS.items()
     }
 
+rois = None
+
 while True:
     frame = stream.read()
     if frame is None:
         break
 
-    rois = scale_rois(frame)
+    if rois is None:
+        rois = scale_rois(frame)
     curr_rois = {k: frame[y1:y2, x1:x2] for k, (y1, y2, x1, x2) in rois.items()}
 
     tasks = {}

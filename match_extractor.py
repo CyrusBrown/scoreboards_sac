@@ -61,15 +61,17 @@ class MatchProcessor:
     def _extract_text(self, roi, number_only=False):
         if roi is None or roi.size == 0:
             return ""
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         config = "--psm 7"
         if number_only:
             config += " -c tessedit_char_whitelist=0123456789:"
-        return pytesseract.image_to_string(roi, config=config).strip()
+        return pytesseract.image_to_string(thresh, config=config).strip()
 
-    def _has_changed(self, img1, img2, threshold=500):
+    def _has_changed(self, img1, img2, threshold=2.0):
         if img1 is None or img2 is None:
             return True
-        return np.sum(cv2.absdiff(img1, img2)) > threshold
+        return np.mean(cv2.absdiff(img1, img2)) > threshold
 
     def _parse_timer(self, timer_str):
         timer_str = timer_str.replace("O", "0").replace("l", "1").replace("S", "5").strip()
